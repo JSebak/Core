@@ -39,7 +39,7 @@ namespace Business.Services
                     new Claim(JwtRegisteredClaimNames.Sub, user.Username),
                     new Claim(JwtRegisteredClaimNames.Jti, Guid.NewGuid().ToString()),
                     new Claim(ClaimTypes.NameIdentifier, user.Id.ToString()),
-                    new Claim(ClaimTypes.Role, user.Role)
+                    new Claim(ClaimTypes.Role, user.Role.ToString())
                 };
 
                 if (!double.TryParse(jwtSettings["ExpirationMinutes"], out var expirationMinutes))

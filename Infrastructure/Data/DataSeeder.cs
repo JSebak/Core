@@ -25,9 +25,9 @@ namespace Infrastructure.Data
                     {
                         var users = new List<User>
                         {
-                            new User(username: "SuperAdmin", password: "password", email: "superadmin@admin.com", role: "super"),
-                            new User(username: "Admin", password: "password", email: "admin@admin.com", role: "admin"),
-                            new User(username: "Guest", password: "password", email: "guest@admin.com", role: "user"),
+                            new User(username: "SuperAdmin", password: "Admin.123!", email: "superadmin@admin.com", role: Domain.Enums.UserRole.Super),
+                            new User(username: "Admin", password: "Admin.123!", email: "admin@admin.com", role: Domain.Enums.UserRole.Admin),
+                            new User(username: "Guest", password: "Admin.123!", email: "guest@admin.com", role: Domain.Enums.UserRole.User),
                         };
 
                         users.ForEach(user =>

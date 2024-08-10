@@ -51,7 +51,7 @@ namespace CoreTests.Services
                 u.Username == newUser.UserName &&
                 u.Email == newUser.Email &&
                 isValidPassword &&
-                u.Role == newUser.Role
+                u.Role == User.ConvertToUserRole(newUser.Role)
             )), Times.Once);
         }
 
@@ -67,7 +67,7 @@ namespace CoreTests.Services
                 Role = "User"
             };
 
-            var existingUser = new User("existingUser", "hashedPassword", "existing@example.com", "User");
+            var existingUser = new User("existingUser", "hashedPassword", "existing@example.com", User.ConvertToUserRole("User"));
 
             _userRepositoryMock.Setup(repo => repo.GetByEmail(newUser.Email))
                 .ReturnsAsync(existingUser);
@@ -156,7 +156,7 @@ namespace CoreTests.Services
         {
             // Arrange
             var userId = 1;
-            var existingUser = new User("oldUser", BCrypt.Net.BCrypt.HashPassword("oldPassword"), "old@example.com", "User");
+            var existingUser = new User("oldUser", BCrypt.Net.BCrypt.HashPassword("oldPassword"), "old@example.com", User.ConvertToUserRole("User"));
             var updatedUserModel = new UserUpdateModel
             {
                 UserName = "newUser",
@@ -177,12 +177,12 @@ namespace CoreTests.Services
                 u.Username == updatedUserModel.UserName &&
                 u.Email == updatedUserModel.Email &&
                 passwordIsValid &&
-                u.Role == updatedUserModel.Role
+                u.Role == User.ConvertToUserRole(updatedUserModel.Role)
             )), Times.Once);
             Assert.Equal(updatedUserModel.UserName, existingUser.Username); // Username is updated
             Assert.Equal(updatedUserModel.Email, existingUser.Email); // Email is updated
             Assert.True(BCrypt.Net.BCrypt.Verify(updatedUserModel.Password, existingUser.Password)); // Password is updated
-            Assert.Equal(updatedUserModel.Role, existingUser.Role);
+            Assert.Equal(User.ConvertToUserRole(updatedUserModel.Role), existingUser.Role);
         }
 
         [Fact]
@@ -190,7 +190,7 @@ namespace CoreTests.Services
         {
             // Arrange
             var userId = 1;
-            var existingUser = new User("oldUser", BCrypt.Net.BCrypt.HashPassword("oldPassword"), "old@example.com", "User");
+            var existingUser = new User("oldUser", BCrypt.Net.BCrypt.HashPassword("oldPassword"), "old@example.com", User.ConvertToUserRole("User"));
             var updatedUserModel = new UserUpdateModel
             {
                 UserName = "oldUser",
@@ -241,7 +241,7 @@ namespace CoreTests.Services
         {
             // Arrange
             var userId = 1;
-            var existingUser = new User("oldUser", BCrypt.Net.BCrypt.HashPassword("oldPassword"), "old@example.com", "User");
+            var existingUser = new User("oldUser", BCrypt.Net.BCrypt.HashPassword("oldPassword"), "old@example.com", User.ConvertToUserRole("User"));
             var updatedUserModel = new UserUpdateModel
             {
                 UserName = "newUser",
@@ -274,7 +274,7 @@ namespace CoreTests.Services
         {
             // Arrange
             var userId = 1;
-            var existingUser = new User("oldUser", BCrypt.Net.BCrypt.HashPassword("oldPassword"), "old@example.com", "User");
+            var existingUser = new User("oldUser", BCrypt.Net.BCrypt.HashPassword("oldPassword"), "old@example.com", User.ConvertToUserRole("User"));
             var updatedUserModel = new UserUpdateModel
             {
                 Email = "new@example.com"

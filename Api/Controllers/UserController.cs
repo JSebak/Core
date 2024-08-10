@@ -20,7 +20,7 @@ namespace Api.Controllers
             _logger = logger;
             _localizer = localizer;
         }
-
+        [Authorize(Roles = "Admin,Super")]
         [HttpGet(Name = "Get Users", Order = 1)]
         public async Task<ActionResult> GetAll()
         {
@@ -73,16 +73,16 @@ namespace Api.Controllers
             catch (ArgumentException ex)
             {
                 _logger.LogWarning(ex, "Invalid input for user registration.");
-                return BadRequest(new { message = ex.Message });
+                return BadRequest(_localizer["Registered"].Value ?? ex.Message);
             }
             catch (Exception ex)
             {
                 _logger.LogError(ex, "An error occurred while registering the user.");
-                return StatusCode(500, new { message = _localizer["ErrorRegisteringUser"].Value });
+                return StatusCode(500, _localizer["ErrorRegisteringUser"].Value ?? "An error occurred while registering the user.");
             }
         }
 
-        [Authorize]
+        [Authorize(Roles = "Admin,Super")]
         [HttpDelete("{id}", Name = "Delete Id", Order = 5)]
         public async Task<ActionResult> Delete(int id)
         {
@@ -103,7 +103,7 @@ namespace Api.Controllers
             }
         }
 
-        [Authorize]
+        [Authorize(Roles = "admin,super")]
         [HttpPost("{id}", Name = "Update User", Order = 4)]
         public async Task<ActionResult> Update(int id, [FromBody] UserUpdateModel updatedUser)
         {

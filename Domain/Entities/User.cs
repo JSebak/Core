@@ -1,4 +1,5 @@
-﻿using System.Text.RegularExpressions;
+﻿using Domain.Enums;
+using System.Text.RegularExpressions;
 
 namespace Domain.Entities
 {
@@ -8,9 +9,9 @@ namespace Domain.Entities
         public string Username { get; private set; }
         public string Password { get; private set; }
         public string Email { get; private set; }
-        public string Role { get; private set; }
+        public UserRole Role { get; private set; }
 
-        public User(string username, string password, string email, string role)
+        public User(string username, string password, string email, UserRole role)
         {
             ValidateUsername(username);
             ValidatePassword(password);
@@ -21,6 +22,18 @@ namespace Domain.Entities
             Password = password;
             Email = email;
             Role = role;
+        }
+
+        public static UserRole ConvertToUserRole(string roleString)
+        {
+            if (Enum.TryParse(roleString, true, out UserRole role) && Enum.IsDefined(typeof(UserRole), role))
+            {
+                return role;
+            }
+            else
+            {
+                throw new ArgumentException($"Invalid role value: {roleString}");
+            }
         }
 
         public void UpdatePassword(string newPassword)
@@ -41,7 +54,7 @@ namespace Domain.Entities
             Email = newEmail;
         }
 
-        public void ChangeRole(string newRole)
+        public void ChangeRole(UserRole newRole)
         {
             ValidateRole(newRole);
             Role = newRole;
@@ -78,10 +91,10 @@ namespace Domain.Entities
             }
         }
 
-        private void ValidateRole(string role)
+        private void ValidateRole(UserRole role)
         {
-            if (string.IsNullOrWhiteSpace(role))
-                throw new ArgumentException("Role cannot be empty", nameof(role));
+            if (!Enum.IsDefined(typeof(UserRole), role))
+                throw new ArgumentException("Invalid role", nameof(role));
         }
     }
 }

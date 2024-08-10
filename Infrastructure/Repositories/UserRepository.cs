@@ -81,7 +81,7 @@ namespace Infrastructure.Repositories
             }
         }
 
-        public async Task<User> GetById(int id)
+        public async Task<User?> GetById(int id)
         {
             if (id <= 0)
                 throw new ArgumentException("Invalid user ID", nameof(id));
@@ -89,9 +89,6 @@ namespace Infrastructure.Repositories
             try
             {
                 var user = await _context.Users.FindAsync(id);
-                if (user == null)
-                    throw new KeyNotFoundException("User not found");
-
                 return user;
             }
             catch (Exception ex)
@@ -130,7 +127,7 @@ namespace Infrastructure.Repositories
             }
         }
 
-        public async Task<User> GetByEmail(string email)
+        public async Task<User?> GetByEmail(string email)
         {
             if (string.IsNullOrEmpty(email))
                 throw new ArgumentException("Invalid user email", nameof(email));
@@ -138,9 +135,6 @@ namespace Infrastructure.Repositories
             try
             {
                 var user = await _context.Users.SingleOrDefaultAsync(u => u.Email == email);
-                if (user == null)
-                    throw new KeyNotFoundException("There's no user registered with this email");
-
                 return user;
             }
             catch (Exception ex)
@@ -150,7 +144,7 @@ namespace Infrastructure.Repositories
             }
         }
 
-        public async Task<User> GetByUserName(string userName)
+        public async Task<User?> GetByUserName(string userName)
         {
             if (string.IsNullOrEmpty(userName))
                 throw new ArgumentException("Invalid username", nameof(userName));
@@ -158,9 +152,6 @@ namespace Infrastructure.Repositories
             try
             {
                 var user = await _context.Users.SingleOrDefaultAsync(u => u.Username == userName);
-                if (user == null)
-                    throw new KeyNotFoundException("There's no user registered with this username");
-
                 return user;
             }
             catch (Exception ex)

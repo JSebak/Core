@@ -74,13 +74,17 @@ namespace Business.Services
                 if (existingUser != null || existingUserByUsername != null)
                     throw new InvalidDataException("User already exists");
 
-                var user = new User(userToRegister.UserName, userToRegister.Password, userToRegister.Email, userToRegister.Role);
+                var user = new User(userToRegister.UserName, userToRegister.Password, userToRegister.Email, User.ConvertToUserRole(userToRegister.Role));
                 var hashedPassword = BCrypt.Net.BCrypt.HashPassword(userToRegister.Password);
                 user.UpdatePassword(hashedPassword);
 
                 await _userRepository.Add(user);
             }
             catch (InvalidDataException)
+            {
+                throw;
+            }
+            catch (ArgumentException)
             {
                 throw;
             }
@@ -101,7 +105,7 @@ namespace Business.Services
                     throw new KeyNotFoundException("User not found");
 
                 var isUpdated = false;
-
+                var updatedUserRole = User.ConvertToUserRole(updatedUser.Role);
                 if (!string.IsNullOrEmpty(updatedUser.Email) && user.Email != updatedUser.Email)
                 {
                     user.UpdateEmail(updatedUser.Email);
@@ -118,9 +122,9 @@ namespace Business.Services
                     user.UpdatePassword(hashedPassword);
                     isUpdated = true;
                 }
-                if (!string.IsNullOrEmpty(updatedUser.Role) && user.Role != updatedUser.Role)
+                if (!string.IsNullOrEmpty(updatedUser.Role) && user.Role != updatedUserRole)
                 {
-                    user.ChangeRole(updatedUser.Role);
+                    user.ChangeRole(updatedUserRole);
                     isUpdated = true;
                 }
 
@@ -132,6 +136,11 @@ namespace Business.Services
             catch (KeyNotFoundException ex)
             {
                 _logger.LogWarning(ex, "User with ID {UserId} not found.", id);
+                throw;
+            }
+            catch (ArgumentException ex)
+            {
+                _logger.LogWarning(ex.Message);
                 throw;
             }
             catch (Exception ex)
