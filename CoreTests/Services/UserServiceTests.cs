@@ -1,4 +1,5 @@
-﻿using Business.Services;
+﻿using AutoMapper;
+using Business.Services;
 using Domain.Entities;
 using Domain.Interfaces;
 using Domain.Models;
@@ -11,13 +12,15 @@ namespace CoreTests.Services
     {
         private readonly Mock<IUserRepository> _userRepositoryMock;
         private readonly Mock<ILogger<UserService>> _loggerMock;
+        private readonly Mock<IMapper> _mapperMock;
         private readonly UserService _userService;
 
         public UserServiceTests()
         {
             _userRepositoryMock = new Mock<IUserRepository>();
             _loggerMock = new Mock<ILogger<UserService>>();
-            _userService = new UserService(_userRepositoryMock.Object, _loggerMock.Object);
+            _mapperMock = new Mock<IMapper>();
+            _userService = new UserService(_userRepositoryMock.Object, _loggerMock.Object, _mapperMock.Object);
         }
 
         #region Create User
@@ -102,6 +105,8 @@ namespace CoreTests.Services
 
             _userRepositoryMock.Verify(repo => repo.Add(It.IsAny<User>()), Times.Never);
         }
+
+
 
         [Fact]
         public async Task CreateUser_ShouldLogError_AndThrowException_WhenErrorOccurs()

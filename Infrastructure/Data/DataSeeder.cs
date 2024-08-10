@@ -1,39 +1,53 @@
 ﻿using Domain.Entities;
+using Microsoft.Extensions.Logging;
 
 namespace Infrastructure.Data
 {
     public class DataSeeder
     {
-        public static async Task Seed(UserDbContext context)
+        private readonly UserDbContext _context;
+        private readonly ILogger<DataSeeder> _logger;
+
+        public DataSeeder(UserDbContext context, ILogger<DataSeeder> logger)
         {
-            context.Database.EnsureCreated();
-            using (var transaction = context.Database.BeginTransaction())
+            _context = context;
+            _logger = logger;
+        }
+
+        public async Task Seed()
+        {
+            _context.Database.EnsureCreated();
+            using (var transaction = await _context.Database.BeginTransactionAsync())
             {
                 try
                 {
-                    if (!context.Users.Any())
+                    if (!_context.Users.Any())
                     {
-
                         var users = new List<User>
                         {
-                            new User (username: "SuperAdmin", password: "password", email: "superadmin@admin.com", role: "super"),
-                            new User (username: "Admin", password: "password", email: "admin@admin.com", role: "admin"),
-                            new User (username: "Guest", password: "password", email: "guest@admin.com", role: "user"),
+                            new User(username: "SuperAdmin", password: "password", email: "superadmin@admin.com", role: "super"),
+                            new User(username: "Admin", password: "password", email: "admin@admin.com", role: "admin"),
+                            new User(username: "Guest", password: "password", email: "guest@admin.com", role: "user"),
                         };
+
                         users.ForEach(user =>
                         {
                             user.UpdatePassword(BCrypt.Net.BCrypt.HashPassword(user.Password));
                         });
-                        await context.ResetPrimaryKeyAutoIncrementAsync();
-                        context.Users.AddRange(users);
-                        await context.SaveChangesAsync();
+
+                        await _context.ResetPrimaryKeyAutoIncrementAsync();
+                        _context.Users.AddRange(users);
+                        await _context.SaveChangesAsync();
                     }
-                    transaction.Commit();
+
+                    await transaction.CommitAsync();
                 }
-                catch (Exception)
+                catch (Exception ex)
                 {
-                    transaction?.Rollback();
-                    throw;
+                    _logger.LogError(ex, "An error occurred while seeding the database.");
+                    await transaction.RollbackAsync();
+
+                    throw new Exception("Database seeding failed. The transaction has been rolled back.", ex);
                 }
             }
         }

@@ -1,4 +1,6 @@
-﻿namespace Domain.Entities
+﻿using System.Text.RegularExpressions;
+
+namespace Domain.Entities
 {
     public class User
     {
@@ -7,16 +9,13 @@
         public string Password { get; private set; }
         public string Email { get; private set; }
         public string Role { get; private set; }
+
         public User(string username, string password, string email, string role)
         {
-            if (string.IsNullOrWhiteSpace(username))
-                throw new ArgumentException("Username cannot be empty", nameof(username));
-            if (string.IsNullOrWhiteSpace(password))
-                throw new ArgumentException("Password cannot be empty", nameof(password));
-            if (string.IsNullOrWhiteSpace(email))
-                throw new ArgumentException("Email cannot be empty", nameof(email));
-            if (string.IsNullOrWhiteSpace(role))
-                throw new ArgumentException("Role cannot be empty", nameof(role));
+            ValidateUsername(username);
+            ValidatePassword(password);
+            ValidateEmail(email);
+            ValidateRole(role);
 
             Username = username;
             Password = password;
@@ -26,35 +25,63 @@
 
         public void UpdatePassword(string newPassword)
         {
-            if (string.IsNullOrWhiteSpace(newPassword))
-                throw new ArgumentException("Password cannot be empty", nameof(newPassword));
-
+            ValidatePassword(newPassword);
             Password = newPassword;
         }
 
         public void UpdateUserName(string newUsername)
         {
-            if (string.IsNullOrWhiteSpace(newUsername))
-                throw new ArgumentException("Username cannot be empty", nameof(newUsername));
-
+            ValidateUsername(newUsername);
             Username = newUsername;
         }
 
         public void UpdateEmail(string newEmail)
         {
-            if (string.IsNullOrWhiteSpace(newEmail))
-                throw new ArgumentException("Email cannot be empty", nameof(newEmail));
-
+            ValidateEmail(newEmail);
             Email = newEmail;
         }
 
         public void ChangeRole(string newRole)
         {
-            if (string.IsNullOrWhiteSpace(newRole))
-                throw new ArgumentException("Role cannot be empty", nameof(newRole));
-
+            ValidateRole(newRole);
             Role = newRole;
         }
-    }
 
+        private void ValidateUsername(string username)
+        {
+            if (string.IsNullOrWhiteSpace(username))
+                throw new ArgumentException("Username cannot be empty", nameof(username));
+        }
+
+        private void ValidatePassword(string password)
+        {
+            if (string.IsNullOrWhiteSpace(password))
+                throw new ArgumentException("Password cannot be empty", nameof(password));
+
+            if (password.Length < 8 ||
+                !Regex.IsMatch(password, @"[A-Z]") ||
+                !Regex.IsMatch(password, @"\d") ||
+                !Regex.IsMatch(password, @"[@$!%*?&#]"))
+            {
+                throw new ArgumentException("Password must be at least 8 characters long, contain one uppercase letter, one number, and one special character.", nameof(password));
+            }
+        }
+
+        private void ValidateEmail(string email)
+        {
+            if (string.IsNullOrWhiteSpace(email))
+                throw new ArgumentException("Email cannot be empty", nameof(email));
+
+            if (!Regex.IsMatch(email, @"^[^@\s]+@[^@\s]+\.[^@\s]+$"))
+            {
+                throw new ArgumentException("Invalid email format", nameof(email));
+            }
+        }
+
+        private void ValidateRole(string role)
+        {
+            if (string.IsNullOrWhiteSpace(role))
+                throw new ArgumentException("Role cannot be empty", nameof(role));
+        }
+    }
 }

@@ -1,4 +1,5 @@
-﻿using Domain.Entities;
+﻿using AutoMapper;
+using Domain.Entities;
 using Domain.Interfaces;
 using Domain.Models;
 using Microsoft.Extensions.Logging;
@@ -9,18 +10,20 @@ namespace Business.Services
     {
         private readonly IUserRepository _userRepository;
         private readonly ILogger<UserService> _logger;
+        private readonly IMapper _mapper;
 
-        public UserService(IUserRepository userRepository, ILogger<UserService> logger)
+        public UserService(IUserRepository userRepository, ILogger<UserService> logger, IMapper mapper)
         {
             _userRepository = userRepository;
             _logger = logger;
+            _mapper = mapper;
         }
 
-        public async Task<IEnumerable<User>> GetAllUsers()
+        public async Task<IEnumerable<UserDto>> GetAllUsers()
         {
             try
             {
-                return await _userRepository.GetAll();
+                return (await _userRepository.GetAll()).Select(user => new UserDto { Id = user.Id, Username = user.Username });
             }
             catch (Exception)
             {
@@ -28,11 +31,11 @@ namespace Business.Services
             }
         }
 
-        public Task<User> GetUserById(int id)
+        public async Task<UserDetailsDto> GetUserById(int id)
         {
             try
             {
-                return _userRepository.GetById(id);
+                return _mapper.Map<UserDetailsDto>(await _userRepository.GetById(id));
             }
             catch (Exception)
             {
@@ -40,11 +43,11 @@ namespace Business.Services
             }
         }
 
-        public Task<User> GetUserByEmail(string email)
+        public async Task<UserDetailsDto> GetUserByEmail(string email)
         {
             try
             {
-                return _userRepository.GetByEmail(email);
+                return _mapper.Map<UserDetailsDto>(await _userRepository.GetByEmail(email));
             }
             catch (Exception)
             {

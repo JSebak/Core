@@ -13,6 +13,7 @@ namespace Api.Controllers
         private readonly IUserService _userService;
         private readonly ILogger<UserController> _logger;
         private readonly IStringLocalizer<UserController> _localizer;
+
         public UserController(IUserService userService, ILogger<UserController> logger, IStringLocalizer<UserController> localizer)
         {
             _userService = userService;
@@ -30,10 +31,9 @@ namespace Api.Controllers
             }
             catch (Exception ex)
             {
-
-                throw;
+                _logger.LogError(ex, "An error occurred while retrieving users.");
+                return StatusCode(500, new { message = _localizer["ErrorRetrievingUsers"].Value });
             }
-
         }
 
         [Authorize]
@@ -43,12 +43,22 @@ namespace Api.Controllers
             try
             {
                 var user = await _userService.GetUserById(id);
+                if (user == null)
+                {
+                    _logger.LogWarning("User with ID {UserId} not found.", id);
+                    return NotFound(new { message = _localizer["UserNotFound"].Value });
+                }
                 return Ok(user);
             }
-            catch (Exception)
+            catch (KeyNotFoundException ex)
             {
-
-                throw;
+                _logger.LogWarning(ex, "User with ID {UserId} not found.", id);
+                return NotFound(new { message = ex.Message });
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "An error occurred while retrieving the user with ID {UserId}.", id);
+                return StatusCode(500, new { message = _localizer["ErrorRetrievingUser"].Value });
             }
         }
 
@@ -60,13 +70,19 @@ namespace Api.Controllers
                 await _userService.CreateUser(user);
                 return Ok(_localizer["Registered"].Value);
             }
-            catch (Exception)
+            catch (ArgumentException ex)
             {
-                throw;
+                _logger.LogWarning(ex, "Invalid input for user registration.");
+                return BadRequest(new { message = ex.Message });
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "An error occurred while registering the user.");
+                return StatusCode(500, new { message = _localizer["ErrorRegisteringUser"].Value });
             }
         }
 
-        //[Authorize]
+        [Authorize]
         [HttpDelete("{id}", Name = "Delete Id", Order = 5)]
         public async Task<ActionResult> Delete(int id)
         {
@@ -75,13 +91,19 @@ namespace Api.Controllers
                 await _userService.DeleteUser(id);
                 return NoContent();
             }
-            catch (Exception)
+            catch (KeyNotFoundException ex)
             {
-                return BadRequest();
+                _logger.LogWarning(ex, "User with ID {UserId} not found.", id);
+                return NotFound(new { message = ex.Message });
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "An error occurred while deleting the user with ID {UserId}.", id);
+                return StatusCode(500, new { message = _localizer["ErrorDeletingUser"].Value });
             }
         }
 
-        //[Authorize]
+        [Authorize]
         [HttpPost("{id}", Name = "Update User", Order = 4)]
         public async Task<ActionResult> Update(int id, [FromBody] UserUpdateModel updatedUser)
         {
@@ -103,7 +125,7 @@ namespace Api.Controllers
             catch (Exception ex)
             {
                 _logger.LogError(ex, "An error occurred while updating the user with ID {UserId}.", id);
-                return StatusCode(500, new { message = "An error occurred while updating the user." });
+                return StatusCode(500, new { message = _localizer["ErrorUpdatingUser"].Value });
             }
         }
     }

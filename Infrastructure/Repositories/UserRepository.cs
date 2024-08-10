@@ -19,8 +19,15 @@ namespace Infrastructure.Repositories
 
         public async Task<IEnumerable<User>> GetAll()
         {
-            var users = await _context.Users.ToListAsync();
-            return users;
+            try
+            {
+                return await _context.Users.ToListAsync();
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "An error occurred while retrieving all users.");
+                throw new Exception("An error occurred while retrieving all users.", ex);
+            }
         }
 
         public async Task Add(User user)
@@ -28,11 +35,24 @@ namespace Infrastructure.Repositories
             if (user == null)
                 throw new ArgumentNullException(nameof(user));
 
-            if (_context.Users.Any(u => u.Email == user.Email))
-                throw new InvalidOperationException("User with the same email already exists");
+            try
+            {
+                if (_context.Users.Any(u => u.Email == user.Email))
+                    throw new InvalidOperationException("User with the same email already exists");
 
-            _context.Users.Add(user);
-            await _context.SaveChangesAsync();
+                _context.Users.Add(user);
+                await _context.SaveChangesAsync();
+            }
+            catch (DbUpdateException ex)
+            {
+                _logger.LogError(ex, "An error occurred while adding the user with Email {Email}.", user.Email);
+                throw new Exception("A database error occurred while adding the user.", ex);
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "An unexpected error occurred while adding the user with Email {Email}.", user.Email);
+                throw new Exception("An unexpected error occurred while adding the user.", ex);
+            }
         }
 
         public async Task Delete(int id)
@@ -40,12 +60,25 @@ namespace Infrastructure.Repositories
             if (id <= 0)
                 throw new ArgumentException("Invalid user ID", nameof(id));
 
-            var user = _context.Users.Find(id);
-            if (user == null)
-                throw new KeyNotFoundException("User not found");
+            try
+            {
+                var user = await _context.Users.FindAsync(id);
+                if (user == null)
+                    throw new KeyNotFoundException("User not found");
 
-            _context.Users.Remove(user);
-            await _context.SaveChangesAsync();
+                _context.Users.Remove(user);
+                await _context.SaveChangesAsync();
+            }
+            catch (DbUpdateException ex)
+            {
+                _logger.LogError(ex, "An error occurred while deleting the user with ID {Id}.", id);
+                throw new Exception("A database error occurred while deleting the user.", ex);
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "An unexpected error occurred while deleting the user with ID {Id}.", id);
+                throw new Exception("An unexpected error occurred while deleting the user.", ex);
+            }
         }
 
         public async Task<User> GetById(int id)
@@ -53,11 +86,19 @@ namespace Infrastructure.Repositories
             if (id <= 0)
                 throw new ArgumentException("Invalid user ID", nameof(id));
 
-            var user = await _context.Users.FindAsync(id);
-            if (user == null)
-                throw new KeyNotFoundException("User not found");
+            try
+            {
+                var user = await _context.Users.FindAsync(id);
+                if (user == null)
+                    throw new KeyNotFoundException("User not found");
 
-            return user;
+                return user;
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "An error occurred while retrieving the user with ID {Id}.", id);
+                throw new Exception("An error occurred while retrieving the user.", ex);
+            }
         }
 
         public async Task Update(User user)
@@ -79,22 +120,34 @@ namespace Infrastructure.Repositories
             }
             catch (DbUpdateException ex)
             {
-                _logger.LogError(ex, "An error occurred while updating the user.");
+                _logger.LogError(ex, "An error occurred while updating the user with ID {Id}.", user.Id);
                 throw new Exception("A database error occurred while updating the user.", ex);
             }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "An unexpected error occurred while updating the user with ID {Id}.", user.Id);
+                throw new Exception("An unexpected error occurred while updating the user.", ex);
+            }
         }
-
 
         public async Task<User> GetByEmail(string email)
         {
             if (string.IsNullOrEmpty(email))
                 throw new ArgumentException("Invalid user email", nameof(email));
 
-            var user = await _context.Users.SingleOrDefaultAsync(u => u.Email == email);
-            if (user == null)
-                throw new KeyNotFoundException("There's no user registered with this email");
+            try
+            {
+                var user = await _context.Users.SingleOrDefaultAsync(u => u.Email == email);
+                if (user == null)
+                    throw new KeyNotFoundException("There's no user registered with this email");
 
-            return user;
+                return user;
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "An error occurred while retrieving the user with Email {Email}.", email);
+                throw new Exception("An error occurred while retrieving the user.", ex);
+            }
         }
 
         public async Task<User> GetByUserName(string userName)
@@ -102,11 +155,19 @@ namespace Infrastructure.Repositories
             if (string.IsNullOrEmpty(userName))
                 throw new ArgumentException("Invalid username", nameof(userName));
 
-            var user = await _context.Users.SingleOrDefaultAsync(u => u.Username == userName);
-            if (user == null)
-                throw new KeyNotFoundException("There's no user registered with this username");
+            try
+            {
+                var user = await _context.Users.SingleOrDefaultAsync(u => u.Username == userName);
+                if (user == null)
+                    throw new KeyNotFoundException("There's no user registered with this username");
 
-            return user;
+                return user;
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "An error occurred while retrieving the user with Username {UserName}.", userName);
+                throw new Exception("An error occurred while retrieving the user.", ex);
+            }
         }
     }
 }
